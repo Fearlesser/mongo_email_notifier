@@ -30,7 +30,7 @@ certifi
 Installation:
 
 - Clone the repository:
-git clone https://github.com/Fearlesser/form-submission-emailer.git
+git clone https://github.com/Fearlesser/mongo_email_notifier.git
 
 - Navigate to the project directory:
 cd form-submission-emailer
