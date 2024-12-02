@@ -30,7 +30,7 @@ certifi
 Installation:
 
 - Clone the repository:
-git clone https://github.com/yourusername/form-submission-emailer.git
+git clone https://github.com/Fearlesser/form-submission-emailer.git
 
 - Navigate to the project directory:
 cd form-submission-emailer
