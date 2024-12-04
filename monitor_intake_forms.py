@@ -51,7 +51,7 @@ ALLOWED_MIME_TYPES = ["application/pdf", "images/jpeg", "image/png"]
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 
 
-def send_email(text_data, file_data, file_name):
+def send_email(text_data, file_data=None, file_name=None):
     """
         Sends an email with form details in the body and an optional file attachment.
 
@@ -76,24 +76,27 @@ def send_email(text_data, file_data, file_name):
         body = "\n".join(f"{key}: {value}" for key, value in text_data.items() if key != "uploadedFile")
         msg.attach(MIMEText(body, 'plain'))
 
-        if len(file_data) > MAX_FILE_SIZE:
-            logging.warning("File exceeds the size limit")
-            file_data = None
+
 
         # Attach a file, if provided
         if file_data and file_name:
-            mime_type, _ = mimetypes.guess_type(file_name)
-            main_type, sub_type = (mime_type or "application/octet-stream").split("/", 1)
 
-            if mime_type not in ALLOWED_MIME_TYPES:
-                logging.warning(f"Unsupported file type: {mime_type}")
-                file_data = None
+            if len(file_data) > MAX_FILE_SIZE:
+                logging.warning("File exceeds the size limit")
 
-            mime_base = MIMEBase(main_type, sub_type)
-            mime_base.set_payload(file_data)
-            encoders.encode_base64(mime_base)
-            mime_base.add_header('Content-Disposition', f'attachment; filename="{file_name}"')
-            msg.attach(mime_base)
+            else:
+                mime_type, _ = mimetypes.guess_type(file_name)
+                main_type, sub_type = (mime_type or "application/octet-stream").split("/", 1)
+
+                if mime_type not in ALLOWED_MIME_TYPES:
+                    logging.warning(f"Unsupported file type: {mime_type}")
+                    file_data = None
+                else:
+                    mime_base = MIMEBase(main_type, sub_type)
+                    mime_base.set_payload(file_data)
+                    encoders.encode_base64(mime_base)
+                    mime_base.add_header('Content-Disposition', f'attachment; filename="{file_name}"')
+                    msg.attach(mime_base)
 
         # Connect to SMTP server and send the email
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
