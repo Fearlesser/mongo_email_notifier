@@ -34,9 +34,11 @@ os.environ["SSL_CERT_FILE"] = certifi.where()
 MONGO_URI = os.getenv("MONGO_URI")
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
-EMAIL_PASSWORD = os.getenv('GOOGLE_PASSWORD')
+EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
 EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")
-RECIPIENT_EMAIL = os.getenv("RECIPIENT_EMAIL")
+
+# Retrieve and split recipient emails into a list
+RECIPIENT_EMAILS = os.getenv("RECIPIENT_EMAILS").split(",")
 POLLING_INTERVAL = int(os.getenv("POLLING_INTERVAL", 30))
 
 
@@ -69,7 +71,7 @@ def send_email(text_data, file_data=None, file_name=None):
         # Construct the email message
         msg = MIMEMultipart()
         msg['From'] = EMAIL_ADDRESS
-        msg['To'] = RECIPIENT_EMAIL
+        msg['To'] = ", ".join(RECIPIENT_EMAILS)
         msg['Subject'] = subject
 
         # Add form data as plain text in the email body
