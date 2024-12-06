@@ -32,12 +32,10 @@ os.environ["SSL_CERT_FILE"] = certifi.where()
 
 # Environment variables
 MONGO_URI = os.getenv("MONGO_URI")
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
+SMTP_SERVER = os.getenv("SMTP_SERVER")
+SMTP_PORT = os.getenv("SMTP_PORT")
 EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
 EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")
-
-# Retrieve and split recipient emails into a list
 RECIPIENT_EMAILS = os.getenv("RECIPIENT_EMAILS").split(",")
 POLLING_INTERVAL = int(os.getenv("POLLING_INTERVAL", 30))
 
@@ -49,8 +47,14 @@ db = client["test"]
 collection = db["forms"]
 
 # Constants for file validation
-ALLOWED_MIME_TYPES = ["application/pdf", "images/jpeg", "image/png"]
+ALLOWED_MIME_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/gif"]
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+
+
+# Utility for centralized exception handling
+def handle_exception(context, error):
+    logging.exception(f"Error in {context}: {error}")
+    raise
 
 
 def send_email(text_data, file_data=None, file_name=None):
@@ -84,7 +88,7 @@ def send_email(text_data, file_data=None, file_name=None):
         if file_data and file_name:
 
             if len(file_data) > MAX_FILE_SIZE:
-                logging.warning("File exceeds the size limit")
+                logging.warning("File {file_name} exceeds the size limit. Email not sent")
 
             else:
                 mime_type, _ = mimetypes.guess_type(file_name)
@@ -92,7 +96,7 @@ def send_email(text_data, file_data=None, file_name=None):
 
                 if mime_type not in ALLOWED_MIME_TYPES:
                     logging.warning(f"Unsupported file type: {mime_type}")
-                    file_data = None
+                    return
                 else:
                     mime_base = MIMEBase(main_type, sub_type)
                     mime_base.set_payload(file_data)
@@ -105,13 +109,13 @@ def send_email(text_data, file_data=None, file_name=None):
             server.starttls()
             server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
             server.send_message(msg)
-            logging.info("Email sent successfully")
+            logging.info(f"Email sent to")
 
     except smtplib.SMTPException as e:
-        logging.exception("SMTP error occurred")
+        handle_exception("SMTP error occurred", e)
 
     except Exception as e:
-        logging.exception("Error sending email")
+        handle_exception("Error sending email", e)
 
 
 def sent_email_async(*args, **kwargs):
@@ -210,7 +214,7 @@ def monitor_new_submission():
                 send_email(customer_info, file_attachment, file_name)
             time.sleep(POLLING_INTERVAL)
         except Exception as e:
-            print("Error monitoring submission:", e)
+            handle_exception("Error monitoring submission:", e)
             time.sleep(30)
 
 
