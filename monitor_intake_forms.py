@@ -105,7 +105,7 @@ def send_email(text_data, file_data=None, file_name=None):
                     msg.attach(mime_base)
 
         # Connect to SMTP server and send the email
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+        with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
             server.starttls()
             server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
             server.send_message(msg)
