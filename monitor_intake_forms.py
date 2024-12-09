@@ -33,7 +33,7 @@ os.environ["SSL_CERT_FILE"] = certifi.where()
 # Environment variables
 MONGO_URI = os.getenv("MONGO_URI")
 SMTP_SERVER = os.getenv("SMTP_SERVER")
-SMTP_PORT = os.getenv("SMTP_PORT")
+SMTP_PORT = int(os.getenv("SMTP_PORT"))
 EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
 EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")
 RECIPIENT_EMAILS = os.getenv("RECIPIENT_EMAILS").split(",")
