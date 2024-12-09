@@ -33,7 +33,7 @@ os.environ["SSL_CERT_FILE"] = certifi.where()
 # Environment variables
 MONGO_URI = os.getenv("MONGO_URI")
 SMTP_SERVER = os.getenv("SMTP_SERVER")
-SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
+SMTP_PORT = 587
 EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
 EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")
 RECIPIENT_EMAILS = os.getenv("RECIPIENT_EMAILS").split(",")
@@ -105,7 +105,8 @@ def send_email(text_data, file_data=None, file_name=None):
                     msg.attach(mime_base)
 
         # Connect to SMTP server and send the email
-        with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
             server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
             server.send_message(msg)
             logging.info(f"Email sent to")
