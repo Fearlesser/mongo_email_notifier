@@ -88,7 +88,7 @@ def send_email(text_data, file_data=None, file_name=None):
         if file_data and file_name:
 
             if len(file_data) > MAX_FILE_SIZE:
-                logging.warning("File {file_name} exceeds the size limit. Email not sent")
+                logging.warning(f"File {file_name} exceeds the size limit. Email not sent")
 
             else:
                 mime_type, _ = mimetypes.guess_type(file_name)
@@ -106,7 +106,6 @@ def send_email(text_data, file_data=None, file_name=None):
 
         # Connect to SMTP server and send the email
         with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
             server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
             server.send_message(msg)
             logging.info(f"Email sent to")
