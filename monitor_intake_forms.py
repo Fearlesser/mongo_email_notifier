@@ -10,6 +10,7 @@ See the LICENSE file for details.
 import os
 import time
 import logging
+from logging.handlers import TimedRotatingFileHandler
 import smtplib
 from threading import Thread
 from pymongo import MongoClient
@@ -23,7 +24,28 @@ from dotenv import load_dotenv
 
 
 # Setup logging
-logging.basicConfig(filename='app.log', level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+def setup_logging():
+    """Setup logging with rotation handling."""
+    log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    handler = TimedRotatingFileHandler(
+        'app.log',
+        when='midnight',
+        interval=1,
+        backupCount=5
+    )
+    handler.setFormatter(log_formatter)
+    logger = logging.getLogger("MyAppLogger")
+    logger.setLevel(logging.INFO)
+    logger.addHandler(handler)
+    return logger
+
+
+logger = setup_logging()
+
+
+def handle_exception(context, error):
+    logger.exception(f"Error in {context}: {error}")
+    raise
 
 
 # Load environment variables
@@ -52,9 +74,6 @@ MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 
 
 # Utility for centralized exception handling
-def handle_exception(context, error):
-    logging.exception(f"Error in {context}: {error}")
-    raise
 
 
 def send_email(text_data, file_data=None, file_name=None):
@@ -81,20 +100,18 @@ def send_email(text_data, file_data=None, file_name=None):
         body = "\n".join(f"{key}: {value}" for key, value in text_data.items() if key != "uploadedFile")
         msg.attach(MIMEText(body, 'plain'))
 
-
-
         # Attach a file, if provided
         if file_data and file_name:
 
             if len(file_data) > MAX_FILE_SIZE:
-                logging.warning(f"File {file_name} exceeds the size limit. Email not sent")
+                logger.warning(f"File {file_name} exceeds the size limit. Email not sent")
 
             else:
                 mime_type, _ = mimetypes.guess_type(file_name)
                 main_type, sub_type = (mime_type or "application/octet-stream").split("/", 1)
 
                 if mime_type not in ALLOWED_MIME_TYPES:
-                    logging.warning(f"Unsupported file type: {mime_type}")
+                    logger.warning(f"Unsupported file type: {mime_type}")
                     return
                 else:
                     mime_base = MIMEBase(main_type, sub_type)
@@ -107,8 +124,7 @@ def send_email(text_data, file_data=None, file_name=None):
         with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
             server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
             server.send_message(msg)
-            logging.info(f"Email sent to: {', '.join(RECIPIENT_EMAILS)}")
-
+            logger.info(f"Email sent to: {', '.join(RECIPIENT_EMAILS)}")
 
     except smtplib.SMTPException as e:
         handle_exception("SMTP error occurred", e)
@@ -176,9 +192,9 @@ def process_form(form):
             if file_data and file_name:
                 file_attachment = file_data
             else:
-                logging.warning(f"Invalid or unsupported file: {file_name}")
+                logger.warning(f"Invalid or unsupported file: {file_name}")
         else:
-            logging.info("No file uploaded")
+            logger.info("No file uploaded")
 
     return customer_info, file_attachment, file_name
 
@@ -190,7 +206,7 @@ def monitor_new_submission():
     seen_ids = set()
     last_checked_id = None
 
-    logging.info("Monitoring MongoDB for new form submissions...")
+    logger.info("Monitoring MongoDB for new form submissions...")
     while True:
         try:
             # Fetch new forms from the database
@@ -206,7 +222,7 @@ def monitor_new_submission():
                     continue
 
                 seen_ids.add(form_id)
-                logging.info(f"Processing new submission name: {form_name} with ID: {form_id} ")
+                logger.info(f"Processing new submission name: {form_name} with ID: {form_id} ")
 
                 # Process form and send email
                 customer_info, file_attachment, file_name = process_form(form)
