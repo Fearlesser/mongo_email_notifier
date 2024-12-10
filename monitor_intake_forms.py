@@ -67,7 +67,6 @@ def send_email(text_data, file_data=None, file_name=None):
             file_name (str): Name of the attached file.
         """
 
-
     try:
         # Extract form data
         subject = "New Customer Submission"
@@ -105,11 +104,11 @@ def send_email(text_data, file_data=None, file_name=None):
                     msg.attach(mime_base)
 
         # Connect to SMTP server and send the email
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
+        with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
             server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
             server.send_message(msg)
-            logging.info(f"Email sent to")
+            logging.info(f"Email sent to: {', '.join(RECIPIENT_EMAILS)}")
+
 
     except smtplib.SMTPException as e:
         handle_exception("SMTP error occurred", e)
